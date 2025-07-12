@@ -27,6 +27,7 @@ class ModelWrapper:
         inference_only: Optional[bool] = False,
     ):
         self.model = model
+        self.is_regressor = not isinstance(self.model, TabICLClassifier)
         self.inference_only = inference_only
         self.pipeline = make_pipeline(
             TableVectorizer(),  # Automatically handles various data types
