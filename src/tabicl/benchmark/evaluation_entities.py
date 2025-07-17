@@ -5,9 +5,11 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from foundation_model_compare.analysis.entities import TestResult
-from foundation_model_compare.common.enums import MetricType
-from foundation_model_compare.tabpfn.profiler import TimeProfile
+from dr_model_benchmark.common.analysis.entities import ModelScoreMetrics
+from dr_model_benchmark.common.analysis.entities import TestResultV2
+from dr_model_benchmark.common.analysis.enums import Partition
+from dr_model_benchmark.common.enums import MetricType
+from dr_model_benchmark.tabpfn.profiler import TimeProfile
 
 
 class Dataset:
@@ -95,12 +97,16 @@ class TabPFNTestReport:
             ]
         )
 
-    def to_test_result(self) -> TestResult:
-        return TestResult(
+    def to_test_result(self) -> TestResultV2:
+        model_score_metrics = [
+            ModelScoreMetrics(
+                self.metric_type, Partition.TEST, self.median_test_set_score().item(),
+            ),
+            ModelScoreMetrics(
+                self.metric_type, Partition.CV, self.median_cv_score().item(),
+            ),
+        ]
+        return TestResultV2(
             dataset_name=self.name,
-            metric_type=self.metric_type,
-            cv_score=self.median_cv_score().item(),
-            test_score=self.median_test_set_score().item(),
-            fit_clock_time=self.median_train_time().item(),
-            predict_clock_time=self.median_test_set_predict_time().item(),
+            model_score_metrics=model_score_metrics,
         )

@@ -14,7 +14,7 @@ from typing import Optional
 from skrub import TableVectorizer
 from sklearn.pipeline import make_pipeline
 
-from foundation_model_compare.tabpfn.entities import InferenceResults
+from dr_model_benchmark.tabpfn.entities import InferenceResults
 from tabicl.benchmark.entities import Dataset
 
 from tabicl import TabICLClassifier
@@ -39,8 +39,6 @@ class ModelWrapper:
             return self
 
         self.pipeline.fit(dataset.get_train_data_x(), dataset.get_train_data_y())
-
-        # self.model.fit(dataset.get_train_data_x(), dataset.get_train_data_y())
         return self
 
     def inference(
@@ -49,12 +47,6 @@ class ModelWrapper:
         include_true_prediction: Optional[bool] = False,
     ) -> InferenceResults:
         data = dataset.get_test_data_x()
-        # result = (
-        #     InferenceResults(self.model.predict(data))
-        #     if self.is_regressor
-        #     else InferenceResults(self.model.predict(data), self.model.predict_proba(data))
-        # )
-
         result = (
             InferenceResults(self.pipeline.predict(data))
             if self.is_regressor

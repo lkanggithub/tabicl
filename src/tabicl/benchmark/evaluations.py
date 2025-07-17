@@ -18,12 +18,12 @@ from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 
-from foundation_model_compare.common.enums import MetricType
-from foundation_model_compare.common.enums import TargetType
-from foundation_model_compare.tabpfn.entities import CVEvaluationResult
-from foundation_model_compare.tabpfn.entities import Dataset
-from foundation_model_compare.tabpfn.entities import EvaluationResult
-from foundation_model_compare.tabpfn.entities import InferenceResults
+from dr_model_benchmark.common.enums import MetricType
+from dr_model_benchmark.common.enums import TargetType
+from dr_model_benchmark.tabpfn.entities import CVEvaluationResult
+from dr_model_benchmark.tabpfn.entities import Dataset
+from dr_model_benchmark.tabpfn.entities import EvaluationResult
+from dr_model_benchmark.tabpfn.entities import InferenceResults
 
 from tabicl.benchmark.models import ModelWrapper
 
@@ -85,7 +85,6 @@ def evaluate_with_cv(
     cv = KFold(n_splits=num_of_folds, shuffle=True, random_state=1234)
     cv_scores = cross_val_score(
         estimator=model_wrapper.pipeline,
-        # estimator=model_wrapper.model,
         X=dataset.get_train_data_x(),
         y=dataset.get_train_data_y(),
         cv=cv,

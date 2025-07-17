@@ -15,26 +15,25 @@ from typing import List
 
 import click
 import pandas as pd
-
-from tabicl import TabICLClassifier
-from foundation_model_compare.tools.openml.utils import get_openml_study
-from foundation_model_compare.tools.openml.utils import get_openml_task
-from foundation_model_compare.tools.openml.utils import get_train_test_sets_of_openml_dataset
-from foundation_model_compare.analysis.entities import TestResult
-from foundation_model_compare.common.enums import MetricType
-from foundation_model_compare.common.enums import PartitionType
-from foundation_model_compare.common.enums import TargetType
-from foundation_model_compare.tabpfn.profiler import TimeProfile
-from foundation_model_compare.tabpfn.profiler import TimeProfiler
+from dr_model_benchmark.tools.openml.utils import get_openml_study
+from dr_model_benchmark.tools.openml.utils import get_openml_task
+from dr_model_benchmark.tools.openml.utils import get_train_test_sets_of_openml_dataset
+from dr_model_benchmark.common.analysis.entities import TestResultV2
+from dr_model_benchmark.common.enums import MetricType
+from dr_model_benchmark.common.enums import PartitionType
+from dr_model_benchmark.common.enums import TargetType
+from dr_model_benchmark.tabpfn.profiler import TimeProfile
+from dr_model_benchmark.tabpfn.profiler import TimeProfiler
 
 from tabicl.benchmark.entities import Dataset
 from tabicl.benchmark.models import ModelWrapper
 from tabicl.benchmark.evaluations import evaluate_with_cv
 from tabicl.benchmark.evaluations import evaluate_on_inference_result
 from tabicl.benchmark.evaluation_entities import TabPFNTestReport
+from tabicl import TabICLClassifier
+
 
 logger = logging.getLogger(__name__)
-
 
 
 def infer_classification_target_type(
@@ -122,14 +121,13 @@ def run_cli(
         )
 
     # report
-    TestResult.save_to_csv_file(
+    TestResultV2.to_csv(
         [
             TabPFNTestReport.to_test_result(dataset_test_report)
             for dataset_test_report in dataset_test_reports
         ],
         Path(output_report_path),
     )
-
 
 
 if __name__ == "__main__":
