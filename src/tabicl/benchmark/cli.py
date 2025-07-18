@@ -25,11 +25,10 @@ from dr_model_benchmark.common.enums import TargetType
 from dr_model_benchmark.tabpfn.profiler import TimeProfile
 from dr_model_benchmark.tabpfn.profiler import TimeProfiler
 
-from tabicl.benchmark.entities import Dataset
+from tabicl.benchmark.entities import Dataset, TabICLTestReport
 from tabicl.benchmark.models import ModelWrapper
 from tabicl.benchmark.evaluations import evaluate_with_cv
 from tabicl.benchmark.evaluations import evaluate_on_inference_result
-from tabicl.benchmark.evaluation_entities import TabPFNTestReport
 from tabicl import TabICLClassifier
 
 
@@ -78,7 +77,7 @@ def run_cli(
 
     openml_study = get_openml_study(openml_study_id)
     logger.info(f"Total {len(openml_study.tasks)} task(s) to test.")
-    dataset_test_reports: List[TabPFNTestReport] = []
+    dataset_test_reports: List[TabICLTestReport] = []
     for openml_task_id in openml_study.tasks:
         openml_task = get_openml_task(openml_task_id)
         openml_dataset = openml_task.get_dataset()
@@ -125,7 +124,7 @@ def run_cli(
 
         # analysis and report
         dataset_test_reports.append(
-            TabPFNTestReport(
+            TabICLTestReport(
                 openml_dataset.name,
                 cv_evaluation_results,
                 holdout_evaluation_results,
@@ -137,7 +136,7 @@ def run_cli(
     # report
     TestResultV2.to_csv(
         [
-            TabPFNTestReport.to_test_result(dataset_test_report)
+            TabICLTestReport.to_test_result(dataset_test_report)
             for dataset_test_report in dataset_test_reports
         ],
         Path(output_report_path),

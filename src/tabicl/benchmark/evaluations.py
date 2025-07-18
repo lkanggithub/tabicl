@@ -22,10 +22,10 @@ from dr_model_benchmark.common.analysis.evaluations import compute_metric
 from dr_model_benchmark.common.enums import MetricType
 from dr_model_benchmark.common.enums import TargetType
 from dr_model_benchmark.datarobot.predictions import PredictionOutputs
-from dr_model_benchmark.tabpfn.entities import CVEvaluationResult
-from dr_model_benchmark.tabpfn.entities import Dataset
-from dr_model_benchmark.tabpfn.entities import EvaluationResult
 
+from tabicl.benchmark.entities import CVEvaluationResult
+from tabicl.benchmark.entities import Dataset
+from tabicl.benchmark.entities import EvaluationResult
 from tabicl.benchmark.models import ModelWrapper
 
 
@@ -37,7 +37,7 @@ def get_sklearn_scorer(
     scorer_args = {}
     if target_type.is_classification():
         scorer_args.update({"response_method": "predict_proba"})
-    if is_multiclass:
+    if metric_type == MetricType.AUC and is_multiclass:  # FIXME
         scorer_args.update({"multi_class": "ovr"})
 
     return make_scorer(get_sklearn_score_func(metric_type), **scorer_args)
