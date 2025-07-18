@@ -70,11 +70,13 @@ class CVEvaluationResult:
 @dataclass
 class TabPFNTestReport:
     name: str
-    metric_type: MetricType
     cv_evaluation_results: List[CVEvaluationResult]
     test_set_evaluation_results: List[EvaluationResult]
     train_time_profile: List[TimeProfile]
     test_set_predict_time_profile: List[TimeProfile]
+
+    def get_cv_metric_type(self) -> MetricType:  # FIXME
+        return self.cv_evaluation_results[0].evaluation_result.metric_type
 
     def median_cv_score(self) -> np.floating:
         return np.median(
@@ -100,12 +102,19 @@ class TabPFNTestReport:
     def to_test_result(self) -> TestResultV2:
         model_score_metrics = [
             ModelScoreMetrics(
-                self.metric_type, Partition.TEST, self.median_test_set_score().item(),
-            ),
-            ModelScoreMetrics(
-                self.metric_type, Partition.CV, self.median_cv_score().item(),
-            ),
+                self.get_cv_metric_type(),
+                Partition.CV,
+                self.median_cv_score().item(),
+            )
         ]
+        model_score_metrics.extend(
+            [
+                ModelScoreMetrics(
+                    evaluate_result.metric_type, Partition.TEST, evaluate_result.score,
+                )
+                for evaluate_result in self.test_set_evaluation_results
+            ]
+        )
         return TestResultV2(
             dataset_name=self.name,
             model_score_metrics=model_score_metrics,

@@ -12,18 +12,19 @@
 from typing import Callable
 from typing import List
 
+from sklearn.metrics import log_loss
 from sklearn.metrics import make_scorer
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
-
+from dr_model_benchmark.common.analysis.evaluations import compute_metric
 from dr_model_benchmark.common.enums import MetricType
 from dr_model_benchmark.common.enums import TargetType
+from dr_model_benchmark.datarobot.predictions import PredictionOutputs
 from dr_model_benchmark.tabpfn.entities import CVEvaluationResult
 from dr_model_benchmark.tabpfn.entities import Dataset
 from dr_model_benchmark.tabpfn.entities import EvaluationResult
-from dr_model_benchmark.tabpfn.entities import InferenceResults
 
 from tabicl.benchmark.models import ModelWrapper
 
@@ -46,6 +47,7 @@ def get_sklearn_score_func(metric_type: MetricType) -> Callable:
     metric_handler = {
         MetricType.AUC: roc_auc_score,
         MetricType.RMSE: root_mean_squared_error,
+        MetricType.LOGLOSS: log_loss,
     }
     return metric_handler[metric_type]
 
@@ -53,25 +55,9 @@ def get_sklearn_score_func(metric_type: MetricType) -> Callable:
 def evaluate_on_inference_result(
     target_type: TargetType,
     metric_type: MetricType,
-    inference_result: InferenceResults,
+    prediction_outputs: PredictionOutputs,
 ) -> EvaluationResult:
-    if target_type == TargetType.BINARY:
-        prediction_actual = inference_result.prediction_probabilities[:, 1]
-    elif target_type == TargetType.MULTICLASS:
-        prediction_actual = inference_result.prediction_probabilities
-    else:
-        prediction_actual = inference_result.predictions
-
-    score_func_extra_args = {}
-    if target_type == TargetType.MULTICLASS:
-        score_func_extra_args.update({"multi_class": "ovr"})
-    score_func = get_sklearn_score_func(metric_type)
-    score = score_func(
-        inference_result.prediction_true,
-        prediction_actual,
-        **score_func_extra_args,
-    )
-
+    score = compute_metric(prediction_outputs, metric_type, target_type==TargetType.MULTICLASS)
     return EvaluationResult(metric_type, score)
 
 

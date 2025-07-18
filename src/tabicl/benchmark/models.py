@@ -13,8 +13,8 @@ from typing import Optional
 
 from skrub import TableVectorizer
 from sklearn.pipeline import make_pipeline
+from dr_model_benchmark.datarobot.predictions import PredictionOutputs
 
-from dr_model_benchmark.tabpfn.entities import InferenceResults
 from tabicl.benchmark.entities import Dataset
 
 from tabicl import TabICLClassifier
@@ -41,19 +41,19 @@ class ModelWrapper:
         self.pipeline.fit(dataset.get_train_data_x(), dataset.get_train_data_y())
         return self
 
-    def inference(
-        self,
-        dataset: Dataset,
-        include_true_prediction: Optional[bool] = False,
-    ) -> InferenceResults:
-        data = dataset.get_test_data_x()
-        result = (
-            InferenceResults(self.pipeline.predict(data))
-            if self.is_regressor
-            else InferenceResults(self.pipeline.predict(data), self.pipeline.predict_proba(data))
+    def inference(self, dataset: Dataset) -> PredictionOutputs:
+        inference_input_data = dataset.get_test_data_x()
+        prediction_values = self.pipeline.predict(inference_input_data)
+        prediction_proba_values = (
+            self.pipeline.predict_proba(inference_input_data)
+            if not self.is_regressor
+            else None
         )
+        class_labels = self.model.classes_ if not self.is_regressor else None
 
-        if include_true_prediction:
-            result.prediction_true = dataset.get_test_data_y()
-
-        return result
+        return PredictionOutputs(
+            actual_values=dataset.get_test_data_y(),
+            prediction_values=prediction_values,
+            prediction_proba_values=prediction_proba_values,
+            class_labels=class_labels,
+        )

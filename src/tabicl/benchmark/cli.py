@@ -52,10 +52,16 @@ def infer_classification_target_type(
     help="OpenML study id (study contains tasks and datasets)",
 )
 @click.option(
-    "--metric_type",
+    "--training_metric",
     type=click.Choice([metric_type.name for metric_type in MetricType]),
     required=True,
-    help="Metric type of training/evaluation",
+    help="Metric used for training",
+)
+@click.option(
+    "--evaluation_metrics",
+    type=str,
+    required=True,
+    help="Metric used for evaluation",
 )
 @click.option(
     "--output_report_path",
@@ -65,10 +71,10 @@ def infer_classification_target_type(
 )
 def run_cli(
     openml_study_id: int,
-    metric_type: str,
+    training_metric_type: str,
+    evaluation_metrics: str,
     output_report_path: str,
 ) -> None:
-    metric_type = MetricType.from_string(metric_type)
 
     openml_study = get_openml_study(openml_study_id)
     logger.info(f"Total {len(openml_study.tasks)} task(s) to test.")
@@ -83,7 +89,8 @@ def run_cli(
         print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {openml_dataset.name}")
         logger.info(f"Processing task {openml_dataset.name}")
 
-        # evaluate with cv
+        # cross validation
+        training_metric_type = MetricType.from_string(training_metric_type)
         model = TabICLClassifier()
         model_wrapper = ModelWrapper(model)
         cv_evaluation_results = evaluate_with_cv(
@@ -91,7 +98,7 @@ def run_cli(
             dataset,
             5,
             target_type,
-            metric_type,
+            training_metric_type,
         )
         # train
         model = TabICLClassifier()
@@ -103,18 +110,25 @@ def run_cli(
         holdout_predict_time_profile = TimeProfile(PartitionType.HOLDOUT.name)
         with TimeProfiler(holdout_predict_time_profile):
             inference_results = model_wrapper.inference(dataset, include_true_prediction=True)
-        holdout_evaluation_result = evaluate_on_inference_result(
-            target_type,
-            metric_type,
-            inference_results,
-        )
+
+        evaluation_metric_types = [
+            MetricType.from_string(metric) for metric in evaluation_metrics.split(",")
+        ]
+        holdout_evaluation_results = [
+            evaluate_on_inference_result(
+                target_type,
+                evaluation_metric_type,
+                inference_results,
+            )
+            for evaluation_metric_type in evaluation_metric_types
+        ]
+
         # analysis and report
         dataset_test_reports.append(
             TabPFNTestReport(
                 openml_dataset.name,
-                metric_type,
                 cv_evaluation_results,
-                [holdout_evaluation_result],
+                holdout_evaluation_results,
                 [train_fit_time_profile],
                 [holdout_predict_time_profile],
             )
