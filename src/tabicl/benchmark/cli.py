@@ -71,7 +71,7 @@ def infer_classification_target_type(
 )
 def run_cli(
     openml_study_id: int,
-    training_metric_type: str,
+    training_metric: str,
     evaluation_metrics: str,
     output_report_path: str,
 ) -> None:
@@ -90,7 +90,7 @@ def run_cli(
         logger.info(f"Processing task {openml_dataset.name}")
 
         # cross validation
-        training_metric_type = MetricType.from_string(training_metric_type)
+        training_metric_type = MetricType.from_string(training_metric)
         model = TabICLClassifier()
         model_wrapper = ModelWrapper(model)
         cv_evaluation_results = evaluate_with_cv(
@@ -109,7 +109,7 @@ def run_cli(
         # test with holdout
         holdout_predict_time_profile = TimeProfile(PartitionType.HOLDOUT.name)
         with TimeProfiler(holdout_predict_time_profile):
-            inference_results = model_wrapper.inference(dataset, include_true_prediction=True)
+            prediction_outputs = model_wrapper.inference(dataset)
 
         evaluation_metric_types = [
             MetricType.from_string(metric) for metric in evaluation_metrics.split(",")
@@ -118,7 +118,7 @@ def run_cli(
             evaluate_on_inference_result(
                 target_type,
                 evaluation_metric_type,
-                inference_results,
+                prediction_outputs,
             )
             for evaluation_metric_type in evaluation_metric_types
         ]

@@ -11,6 +11,7 @@
 # publication of such source code.
 from typing import Optional
 
+import numpy as np
 from skrub import TableVectorizer
 from sklearn.pipeline import make_pipeline
 from dr_model_benchmark.datarobot.predictions import PredictionOutputs
@@ -34,6 +35,10 @@ class ModelWrapper:
             self.model,
         )
 
+    @staticmethod
+    def is_binary_classification_output(prediction_proba_values: np.ndarray) -> bool:
+        return prediction_proba_values.shape[1] == 2
+
     def fit(self, dataset: Dataset) -> "ModelWrapper":
         if self.inference_only:
             return self
@@ -50,6 +55,12 @@ class ModelWrapper:
             else None
         )
         class_labels = self.model.classes_ if not self.is_regressor else None
+
+        prediction_proba_values = (
+            prediction_proba_values[:, 1]
+            if self.is_binary_classification_output(prediction_proba_values)
+            else prediction_proba_values
+        )
 
         return PredictionOutputs(
             actual_values=dataset.get_test_data_y(),
