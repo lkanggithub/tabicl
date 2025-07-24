@@ -20,11 +20,10 @@ from dr_model_benchmark.tools.openml.utils import get_openml_task
 from dr_model_benchmark.tools.openml.utils import get_train_test_sets_of_openml_dataset
 from dr_model_benchmark.common.analysis.entities import TestResultV2
 from dr_model_benchmark.common.enums import MetricType
-from dr_model_benchmark.common.enums import PartitionType
+from dr_model_benchmark.common.analysis.enums import Partition
 from dr_model_benchmark.common.enums import TargetType
-from dr_model_benchmark.tabpfn.profiler import TimeProfile
-from dr_model_benchmark.tabpfn.profiler import TimeProfiler
-
+from dr_model_benchmark.common.profile.entities import TimeProfile
+from dr_model_benchmark.common.profile.utils import TimeProfiler
 from tabicl.benchmark.entities import Dataset, TabICLTestReport
 from tabicl.benchmark.models import ModelWrapper
 from tabicl.benchmark.evaluations import evaluate_with_cv
@@ -102,11 +101,11 @@ def run_cli(
         # train
         model = TabICLClassifier()
         model_wrapper = ModelWrapper(model)
-        train_fit_time_profile = TimeProfile(PartitionType.TRAIN.name)
+        train_fit_time_profile = TimeProfile(Partition.TRAIN.name)
         with TimeProfiler(train_fit_time_profile):
             model_wrapper.fit(dataset)
-        # test with holdout
-        holdout_predict_time_profile = TimeProfile(PartitionType.HOLDOUT.name)
+        # test with external dataset
+        holdout_predict_time_profile = TimeProfile(Partition.TEST.name)
         with TimeProfiler(holdout_predict_time_profile):
             prediction_outputs = model_wrapper.inference(dataset)
 
