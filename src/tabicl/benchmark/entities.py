@@ -29,18 +29,18 @@ class Dataset:
         y = self.get_train_data_y()
         return len(np.unique(y))
 
-    def get_train_data_x(self) -> np.ndarray:
+    def get_train_data_x(self) -> pd.DataFrame:
         columns = list(self.train_data.columns)
         columns.remove(self.target_name)
-        return self.train_data[columns].values
+        return self.train_data[columns]
 
     def get_train_data_y(self) -> np.ndarray:
         return self.train_data[self.target_name].values
 
-    def get_test_data_x(self) -> np.ndarray:
+    def get_test_data_x(self) -> pd.DataFrame:
         columns = list(self.test_data.columns)
         columns.remove(self.target_name)
-        return self.test_data[columns].values
+        return self.test_data[columns]
 
     def get_test_data_y(self) -> np.ndarray:
         return self.test_data[self.target_name].values
