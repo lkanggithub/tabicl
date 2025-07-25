@@ -1,3 +1,4 @@
+#
 # Copyright 2025 DataRobot, Inc. and its affiliates.
 #
 # All rights reserved.
@@ -19,6 +20,7 @@ from dr_model_benchmark.tools.openml.utils import get_openml_study
 from dr_model_benchmark.tools.openml.utils import get_openml_task
 from dr_model_benchmark.tools.openml.utils import get_train_test_sets_of_openml_dataset
 from dr_model_benchmark.common.analysis.entities import TestResultV2
+from dr_model_benchmark.common.enums import DeviceType
 from dr_model_benchmark.common.enums import MetricType
 from dr_model_benchmark.common.analysis.enums import Partition
 from dr_model_benchmark.common.enums import TargetType
@@ -67,12 +69,21 @@ def infer_classification_target_type(
     required=True,
     help="OpenML datasets will be downloaded here",
 )
+@click.option(
+    "--device_type",
+    type=click.Choice([device_type.name for device_type in DeviceType]),
+    required=False,
+    default=DeviceType.AUTO,
+    help="Device type",
+)
 def run_cli(
     openml_study_id: int,
     training_metric: str,
     evaluation_metrics: str,
     output_report_path: str,
+    device_type: str,
 ) -> None:
+    torch_device_type =DeviceType.from_string(device_type).to_torch_device_type_string()
 
     openml_study = get_openml_study(openml_study_id)
     logger.info(f"Total {len(openml_study.tasks)} task(s) to test.")
@@ -84,12 +95,11 @@ def run_cli(
         task_target_name = openml_task.target_name
         target_type = infer_classification_target_type(train_dataframe, task_target_name)
         dataset = Dataset(train_dataframe, test_dataframe, task_target_name)
-        print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {openml_dataset.name}")
         logger.info(f"Processing task {openml_dataset.name}")
 
         # cross validation
         training_metric_type = MetricType.from_string(training_metric)
-        model = TabICLClassifier()
+        model = TabICLClassifier(device=torch_device_type)
         model_wrapper = ModelWrapper(model)
         cv_evaluation_results = evaluate_with_cv(
             model_wrapper,
@@ -99,7 +109,7 @@ def run_cli(
             training_metric_type,
         )
         # train
-        model = TabICLClassifier()
+        model = TabICLClassifier(device=torch_device_type)
         model_wrapper = ModelWrapper(model)
         train_fit_time_profile = TimeProfile(Partition.TRAIN.name)
         with TimeProfiler(train_fit_time_profile):
