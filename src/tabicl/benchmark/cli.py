@@ -91,11 +91,11 @@ def run_cli(
     for openml_task_id in openml_study.tasks:
         openml_task = get_openml_task(openml_task_id)
         openml_dataset = openml_task.get_dataset()
+        logger.info(f"Processing task {openml_dataset.name}")
         train_dataframe, test_dataframe = get_train_test_sets_of_openml_dataset(openml_task)
         task_target_name = openml_task.target_name
         target_type = infer_classification_target_type(train_dataframe, task_target_name)
         dataset = Dataset(train_dataframe, test_dataframe, task_target_name)
-        logger.info(f"Processing task {openml_dataset.name}")
 
         # cross validation
         training_metric_type = MetricType.from_string(training_metric)
