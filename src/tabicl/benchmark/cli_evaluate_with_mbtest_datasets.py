@@ -18,6 +18,7 @@ import click
 import pandas as pd
 from dr_model_benchmark.common.analysis.entities import TestResultV2
 from dr_model_benchmark.common.enums import DeviceType
+from dr_model_benchmark.common.enums import TargetType
 from dr_model_benchmark.common.analysis.enums import Partition
 from dr_model_benchmark.common.entities import DataRobotMBTestDatasetConfig
 from dr_model_benchmark.common.profile.entities import TimeProfile
@@ -71,12 +72,15 @@ def run_cli(
     dataset_test_reports: List[TabICLTestReport] = []
     for mbtest_config in datarobot_mbtest_configs:
         dataset_name = get_dataset_name(Path(mbtest_config.train_dataset_path))
+        target_type = mbtest_config.rtype
+        if target_type == TargetType.REGRESSION:
+            logger.info(f"Skip task {dataset_name} with target type: {target_type}")
+            continue
         logger.info(f"Processing task {dataset_name}")
 
         train_dataframe = pd.read_csv(mbtest_config.train_dataset_path)
         test_dataframe = pd.read_csv(mbtest_config.pred_dataset_path)
         task_target_name = mbtest_config.target
-        target_type = mbtest_config.rtype
         dataset = Dataset(train_dataframe, test_dataframe, task_target_name)
 
         # cross validation
