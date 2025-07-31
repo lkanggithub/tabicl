@@ -71,9 +71,11 @@ def infer_classification_target_type(
 )
 @click.option(
     "--device_type",
-    type=click.Choice([device_type.name for device_type in DeviceType]),
+    type=click.Choice(
+        [device_type.name for device_type in DeviceType if device_type != DeviceType.AUTO]
+    ),
     required=False,
-    default=DeviceType.AUTO,
+    default=DeviceType.CUDA,
     help="Device type",
 )
 def run_cli(
