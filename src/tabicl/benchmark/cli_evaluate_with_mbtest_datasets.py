@@ -60,10 +60,18 @@ def get_dataset_name(dataset_path: Path) -> str:  # FIXME
     default=DeviceType.CUDA,
     help="Device type",
 )
+@click.option(
+    "--dataset_names_to_exclude",
+    type=str,
+    required=False,
+    default="",
+    help="names of datasets to be excluded from testings",
+)
 def run_cli(
     datarobot_mbtest_yaml_path: str,
     output_report_path: str,
     device_type: str,
+    dataset_names_to_exclude: str,
 ) -> None:
     datarobot_mbtest_configs = DataRobotMBTestDatasetConfig.load_from_yaml(
         Path(datarobot_mbtest_yaml_path)
@@ -72,8 +80,13 @@ def run_cli(
 
     logger.info(f"Total {len(datarobot_mbtest_configs)} task(s) to test.")
     dataset_test_reports: List[TabICLTestReport] = []
+    dataset_names_to_exclude = set(dataset_names_to_exclude.split(","))
     for mbtest_config in datarobot_mbtest_configs:
         dataset_name = get_dataset_name(Path(mbtest_config.train_dataset_path))
+        if dataset_name in dataset_names_to_exclude:
+            logger.info(f"Skipped task: {dataset_name}.")
+            continue
+
         target_type = mbtest_config.rtype
         if target_type == TargetType.REGRESSION:
             logger.info(f"Skip task {dataset_name} with target type: {target_type}")
