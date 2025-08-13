@@ -32,6 +32,8 @@ from tabicl import TabICLClassifier
 
 logger = logging.getLogger(__name__)
 
+MODEL_BATCH_SIZE = 800
+
 
 def get_dataset_name(dataset_path: Path) -> str:  # FIXME
     dataset_file_name = dataset_path.name
@@ -67,11 +69,19 @@ def get_dataset_name(dataset_path: Path) -> str:  # FIXME
     default="",
     help="names of datasets to be excluded from testings",
 )
+@click.option(
+    "--run_cv",
+    type=bool,
+    required=False,
+    default=False,
+    help="If True, CV is run",
+)
 def run_cli(
     datarobot_mbtest_yaml_path: str,
     output_report_path: str,
     device_type: str,
     dataset_names_to_exclude: str,
+    run_cv: bool,
 ) -> None:
     datarobot_mbtest_configs = DataRobotMBTestDatasetConfig.load_from_yaml(
         Path(datarobot_mbtest_yaml_path)
@@ -99,17 +109,19 @@ def run_cli(
         dataset = Dataset(train_dataframe, test_dataframe, task_target_name)
 
         # cross validation
-        model = TabICLClassifier(device=torch_device_type)
-        model_wrapper = ModelWrapper(model)
-        cv_evaluation_results = evaluate_with_cv(
-            model_wrapper,
-            dataset,
-            5,
-            target_type,
-            mbtest_config.metric,
-        )
+        cv_evaluation_results = []
+        if run_cv:
+            model = TabICLClassifier(device=torch_device_type, batch_size=MODEL_BATCH_SIZE)
+            model_wrapper = ModelWrapper(model)
+            cv_evaluation_results = evaluate_with_cv(
+                model_wrapper,
+                dataset,
+                5,
+                target_type,
+                mbtest_config.metric,
+            )
         # train
-        model = TabICLClassifier(device=torch_device_type)
+        model = TabICLClassifier(device=torch_device_type, batch_size=MODEL_BATCH_SIZE)
         model_wrapper = ModelWrapper(model)
         train_fit_time_profile = TimeProfile(Partition.TRAIN.name)
         with TimeProfiler(train_fit_time_profile):
