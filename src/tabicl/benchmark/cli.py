@@ -113,7 +113,7 @@ def run_cli(
         # cross validation
         training_metric_type = MetricType.from_string(training_metric)
         cv_evaluation_results = []
-        if run_csv:
+        if run_cv:
             model = TabICLClassifier(device=torch_device_type, batch_size=MODEL_BATCH_SIZE)
             model_wrapper = ModelWrapper(model)
             cv_evaluation_results = evaluate_with_cv(
