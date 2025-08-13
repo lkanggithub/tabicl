@@ -36,6 +36,9 @@ from tabicl import TabICLClassifier
 logger = logging.getLogger(__name__)
 
 
+MODEL_BATCH_SIZE = 800
+
+
 def infer_classification_target_type(
     classification_train_data: pd.DataFrame, target_name: str
 ) -> TargetType:
@@ -78,12 +81,20 @@ def infer_classification_target_type(
     default=DeviceType.CUDA,
     help="Device type",
 )
+@click.option(
+    "--run_cv",
+    type=bool,
+    required=False,
+    default=False,
+    help="If True, CV is run",
+)
 def run_cli(
     openml_study_id: int,
     training_metric: str,
     evaluation_metrics: str,
     output_report_path: str,
     device_type: str,
+    run_csv: bool,
 ) -> None:
     torch_device_type =DeviceType.from_string(device_type).to_torch_device_type_string()
 
@@ -101,17 +112,19 @@ def run_cli(
 
         # cross validation
         training_metric_type = MetricType.from_string(training_metric)
-        model = TabICLClassifier(device=torch_device_type)
-        model_wrapper = ModelWrapper(model)
-        cv_evaluation_results = evaluate_with_cv(
-            model_wrapper,
-            dataset,
-            5,
-            target_type,
-            training_metric_type,
-        )
+        cv_evaluation_results = []
+        if run_csv:
+            model = TabICLClassifier(device=torch_device_type, batch_size=MODEL_BATCH_SIZE)
+            model_wrapper = ModelWrapper(model)
+            cv_evaluation_results = evaluate_with_cv(
+                model_wrapper,
+                dataset,
+                5,
+                target_type,
+                training_metric_type,
+            )
         # train
-        model = TabICLClassifier(device=torch_device_type)
+        model = TabICLClassifier(device=torch_device_type, batch_size=MODEL_BATCH_SIZE)
         model_wrapper = ModelWrapper(model)
         train_fit_time_profile = TimeProfile(Partition.TRAIN.name)
         with TimeProfiler(train_fit_time_profile):
