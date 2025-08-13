@@ -94,7 +94,7 @@ def run_cli(
     evaluation_metrics: str,
     output_report_path: str,
     device_type: str,
-    run_csv: bool,
+    run_cv: bool,
 ) -> None:
     torch_device_type =DeviceType.from_string(device_type).to_torch_device_type_string()
 
