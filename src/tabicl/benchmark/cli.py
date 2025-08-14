@@ -82,6 +82,13 @@ def infer_classification_target_type(
     help="Device type",
 )
 @click.option(
+    "--datasets_to_test",
+    type=str,
+    required=False,
+    default="",
+    help="a list of datasets to test",
+)
+@click.option(
     "--run_cv",
     type=bool,
     required=False,
@@ -94,9 +101,11 @@ def run_cli(
     evaluation_metrics: str,
     output_report_path: str,
     device_type: str,
+    datasets_to_test: str,
     run_cv: bool,
 ) -> None:
     torch_device_type =DeviceType.from_string(device_type).to_torch_device_type_string()
+    datasets_to_test = set(datasets_to_test.split(","))
 
     openml_study = get_openml_study(openml_study_id)
     logger.info(f"Total {len(openml_study.tasks)} task(s) to test.")
@@ -104,6 +113,9 @@ def run_cli(
     for openml_task_id in openml_study.tasks:
         openml_task = get_openml_task(openml_task_id)
         openml_dataset = openml_task.get_dataset()
+        if datasets_to_test and openml_dataset.name not in datasets_to_test:
+            logger.info(f"Task is skipped: {openml_dataset.name}")
+            continue
         logger.info(f"Processing task {openml_dataset.name}")
         train_dataframe, test_dataframe = get_train_test_sets_of_openml_dataset(openml_task)
         task_target_name = openml_task.target_name
