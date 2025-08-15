@@ -36,7 +36,7 @@ from tabicl import TabICLClassifier
 logger = logging.getLogger(__name__)
 
 
-MODEL_BATCH_SIZE = 800
+MODEL_BATCH_SIZE = 8
 
 
 def infer_classification_target_type(
@@ -105,7 +105,7 @@ def run_cli(
     run_cv: bool,
 ) -> None:
     torch_device_type =DeviceType.from_string(device_type).to_torch_device_type_string()
-    datasets_to_test = set(datasets_to_test.split(","))
+    datasets_to_test = set(datasets_to_test.split(",")) if datasets_to_test else set()
 
     openml_study = get_openml_study(openml_study_id)
     logger.info(f"Total {len(openml_study.tasks)} task(s) to test.")

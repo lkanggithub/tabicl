@@ -32,7 +32,7 @@ from tabicl import TabICLClassifier
 
 logger = logging.getLogger(__name__)
 
-MODEL_BATCH_SIZE = 800
+MODEL_BATCH_SIZE = 8
 
 
 def get_dataset_name(dataset_path: Path) -> str:  # FIXME
